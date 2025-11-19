@@ -5,6 +5,7 @@ import yechan.inflearn_spring_db_1.connection.DBConnectionUtil;
 import yechan.inflearn_spring_db_1.domain.Member;
 
 import java.sql.*;
+import java.util.NoSuchElementException;
 
 @Slf4j
 public class MemberRepositoryV0 {
@@ -28,6 +29,35 @@ public class MemberRepositoryV0 {
         } finally {
             close(conn, pstmt, null);
         }
+    }
+
+    public Member findById(String memberId) {
+        String sql = "select * from member where member_id = ?";
+
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection();
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, memberId);
+            rs = pstmt.executeQuery();
+            if (rs.next()) {
+                Member member = new Member();
+                member.setMemberId(rs.getString("member_id"));
+                member.setMoney(rs.getInt("money"));
+                return member;
+            } else {
+                throw new NoSuchElementException("member not found. memberId = " + memberId);
+            }
+        } catch (SQLException e) {
+            log.error("sql error", e);
+            throw new RuntimeException();
+        } finally {
+            close(conn, pstmt, rs);
+        }
+
     }
 
     private static Connection getConnection() {
